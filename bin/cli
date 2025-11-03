@@ -52,7 +52,7 @@ async function run() {
 			process.exit(2);
 		}
 	} catch (err) {
-		console.error('fetch error:', err.message || err);
+		console.error('fetch error:', err.response?.data?.msg || err);
 		process.exit(3);
 	}
 
