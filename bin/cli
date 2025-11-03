@@ -1,0 +1,100 @@
+#!/usr/bin/env node
+
+const fs = require('fs');
+const path = require('path');
+const { program } = require('commander');
+const moment = require('moment');
+
+const { fetchKlines: fetchSpot } = require(path.resolve(__dirname, '..', 'src', 'spot'));
+const { fetchKlines: fetchFutures } = require(path.resolve(__dirname, '..', 'src', 'futures'));
+
+program
+	.requiredOption('-m, --mode <mode>', 'mode: spot or futures')
+	.requiredOption('-s, --symbol <symbol>', 'symbol, e.g. BTCUSDT')
+	.requiredOption('-i, --interval <interval>', 'interval, e.g. 1m,1h,1d')
+	.requiredOption('--start <start>', 'start time (ISO string or ms timestamp)')
+	.requiredOption('--end <end>', 'end time (ISO string or ms timestamp)')
+	.option('--limit <n>', 'per-request limit (max 1000)', parseInt)
+		.option('-o, --output <file>', 'output file (if omitted prints to stdout)')
+		.option('--csv', 'export CSV file in CWD with timestamp suffix')
+	.parse(process.argv);
+
+async function parseTime(v) {
+	// accept numeric ms or ISO
+	if (/^\d+$/.test(v)) return Number(v);
+	const m = moment(v);
+	if (!m.isValid()) throw new Error('Invalid time: ' + v);
+	return m.valueOf();
+}
+
+async function run() {
+	const opts = program.opts();
+	const mode = opts.mode.toLowerCase();
+	const symbol = opts.symbol;
+	const interval = opts.interval;
+	const limit = opts.limit || 1000;
+
+	const start = await parseTime(opts.start);
+	const end = await parseTime(opts.end);
+	if (start >= end) {
+		console.error('start must be < end');
+		process.exit(2);
+	}
+
+	let data;
+	try {
+		if (mode === 'spot') {
+			data = await fetchSpot({ symbol, interval, startTime: start, endTime: end, limit });
+		} else if (mode === 'futures') {
+			data = await fetchFutures({ symbol, interval, startTime: start, endTime: end, limit });
+		} else {
+			console.error('mode must be spot or futures');
+			process.exit(2);
+		}
+	} catch (err) {
+		console.error('fetch error:', err.message || err);
+		process.exit(3);
+	}
+
+	const out = JSON.stringify(data, null, 2);
+		// CSV export
+		if (opts.csv) {
+			// create filename if not provided
+			const filename = opts.output && opts.output.endsWith('.csv')
+				? opts.output
+				: `${symbol}_${mode}_${interval}_${Date.now()}.csv`;
+
+			// Binance kline format:
+			// [ Open time, Open, High, Low, Close, Volume, Close time, Quote asset volume, Number of trades, Taker buy base asset volume, Taker buy quote asset volume, Ignore ]
+				// include ISO readable time columns while preserving original timestamp columns
+				const header = ['openTime','openTimeISO','open','high','low','close','volume','closeTime','closeTimeISO','quoteAssetVolume','trades','takerBase','takerQuote'];
+				const rows = data.map(r => {
+					const openTime = r[0];
+					const closeTime = r[6];
+					const openTimeISO = moment(openTime).toISOString();
+					const closeTimeISO = moment(closeTime).toISOString();
+					return [
+						openTime,
+						openTimeISO,
+						r[1], r[2], r[3], r[4], r[5],
+						closeTime,
+						closeTimeISO,
+						r[7], r[8], r[9], r[10]
+					].map(String).join(',');
+				});
+			const csv = header.join(',') + '\n' + rows.join('\n');
+			fs.writeFileSync(filename, csv, 'utf8');
+			console.log('Wrote', filename);
+			process.exit(0);
+		}
+
+		if (opts.output) {
+			fs.writeFileSync(opts.output, out, 'utf8');
+			console.log('Wrote', opts.output);
+		} else {
+			console.log(out);
+		}
+}
+
+run();
+
