@@ -60,9 +60,18 @@ async function run() {
 		// CSV export
 		if (opts.csv) {
 			// create filename if not provided
-			const filename = opts.output && opts.output.endsWith('.csv')
-				? opts.output
-				: `${symbol}_${mode}_${interval}_${Date.now()}.csv`;
+			// determine output path: if user provided --output use that (resolve relative to cwd),
+			// otherwise default to ./output/<generated-name>. Ensure ./output exists.
+			const outputDir = path.resolve(__dirname, '..', 'output');
+			if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
+			let filename;
+			if (opts.output) {
+				// resolve provided path relative to cwd
+				filename = path.resolve(process.cwd(), opts.output);
+				if (!filename.toLowerCase().endsWith('.csv')) filename = filename + '.csv';
+			} else {
+				filename = path.join(outputDir, `${symbol}_${mode}_${interval}_${Date.now()}.csv`);
+			}
 
 			// Binance kline format:
 			// [ Open time, Open, High, Low, Close, Volume, Close time, Quote asset volume, Number of trades, Taker buy base asset volume, Taker buy quote asset volume, Ignore ]
