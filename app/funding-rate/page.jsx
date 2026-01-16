@@ -1,43 +1,24 @@
 'use client';
 
 import React from 'react';
-import { Button, Card, DatePicker, Form, Input, Select, Space, Typography } from 'antd';
-import { Sidebar } from './components/Sidebar';
+import { Button, Card, DatePicker, Form, Input, Space, Typography } from 'antd';
+import { Sidebar } from '../components/Sidebar';
 
 const { RangePicker } = DatePicker;
-const { Title, Paragraph, Text } = Typography;
+const { Title, Text } = Typography;
 
-const intervalOptions = [
-  '1s',
-  '1m',
-  '3m',
-  '5m',
-  '15m',
-  '30m',
-  '1h',
-  '2h',
-  '4h',
-  '6h',
-  '12h',
-  '1d',
-  '1w',
-  '1M',
-].map((value) => ({ label: value, value }));
-
-export default function Home() {
+export default function FundingRatePage() {
   const [form] = Form.useForm();
 
   const onFinish = (values) => {
     const [start, end] = values.range;
     const params = new URLSearchParams({
-      mode: values.mode,
       symbol: values.symbol.trim().toUpperCase(),
-      interval: values.interval,
       start: String(start.valueOf()),
       end: String(end.valueOf()),
     });
 
-    window.location.href = `/api/klines?${params.toString()}`;
+    window.location.href = `/api/funding-rate?${params.toString()}`;
   };
 
   return (
@@ -49,41 +30,20 @@ export default function Home() {
           <Card className="tool-card">
             <Space direction="vertical" size={16} style={{ width: '100%' }}>
               <Title level={3} style={{ margin: 0 }}>
-                K 线下载器
+                U 本位合约资金费率下载器
               </Title>
               <Form
                 form={form}
                 layout="vertical"
                 onFinish={onFinish}
-                initialValues={{ mode: 'spot', interval: '1h' }}
+                initialValues={{}}
               >
-                <Form.Item
-                  label="市场"
-                  name="mode"
-                  rules={[{ required: true, message: '请选择市场。' }]}
-                >
-                  <Select
-                    options={[
-                      { label: '现货', value: 'spot' },
-                      { label: '合约', value: 'futures' },
-                    ]}
-                  />
-                </Form.Item>
-
                 <Form.Item
                   label="交易对"
                   name="symbol"
                   rules={[{ required: true, message: '请输入交易对，例如 BTCUSDT。' }]}
                 >
                   <Input placeholder="BTCUSDT" />
-                </Form.Item>
-
-                <Form.Item
-                  label="K 线周期"
-                  name="interval"
-                  rules={[{ required: true, message: '请选择周期。' }]}
-                >
-                  <Select options={intervalOptions} />
                 </Form.Item>
 
                 <Form.Item

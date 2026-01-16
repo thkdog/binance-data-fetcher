@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { fetchKlines, klinesToCsv } from '../../../lib/klines';
+import { fetchFundingRates, fundingRatesToCsv } from '../../../lib/fundingRate';
 
 export const maxDuration = 600;
 
@@ -9,13 +9,11 @@ function sanitizeFilename(value) {
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
-  const mode = searchParams.get('mode');
   const symbol = searchParams.get('symbol');
-  const interval = searchParams.get('interval');
   const start = searchParams.get('start');
   const end = searchParams.get('end');
 
-  if (!mode || !symbol || !interval || !start || !end) {
+  if (!symbol || !start || !end) {
     return NextResponse.json({ error: 'Missing required query params.' }, { status: 400 });
   }
 
@@ -26,20 +24,17 @@ export async function GET(request) {
   }
 
   try {
-    const rows = await fetchKlines({
-      mode,
+    const rows = await fetchFundingRates({
       symbol: symbol.toUpperCase(),
-      interval,
       startTime,
       endTime,
       limit: 1000,
     });
 
-    const csv = klinesToCsv(rows);
+    const csv = fundingRatesToCsv(rows);
     const filename = [
       sanitizeFilename(symbol),
-      sanitizeFilename(mode),
-      sanitizeFilename(interval),
+      'funding_rate',
       startTime,
       endTime,
     ].join('_');
