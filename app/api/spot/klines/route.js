@@ -2,8 +2,7 @@ import { NextResponse } from 'next/server';
 import { fetchSpotKlines } from '@/lib/klines/spot';
 import { klinesToCsv } from '@/lib/klines/shared';
 
-export const runtime = 'nodejs';
-export const maxDuration = 300;
+export const runtime = 'edge';
 
 function sanitizeFilename(value) {
   return String(value).replace(/[^a-zA-Z0-9-_]+/g, '_');
