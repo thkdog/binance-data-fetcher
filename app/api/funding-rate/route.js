@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { fetchFundingRates, fundingRatesToCsv } from '../../../lib/fundingRate';
 
-export const maxDuration = 600;
+export const maxDuration = 300;
 
 function sanitizeFilename(value) {
   return String(value).replace(/[^a-zA-Z0-9-_]+/g, '_');
