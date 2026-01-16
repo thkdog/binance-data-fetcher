@@ -41,7 +41,15 @@ BASIC_AUTH_PASS=yourpassword
 部署到 Vercel
 1. 将该仓库导入 Vercel。
 2. 设置环境变量 `BASIC_AUTH_USER` / `BASIC_AUTH_PASS`。
-3. 直接部署即可。
+3. 直接部署即可。使用默认的 `npm run build` 作为构建命令。
+
+部署到 Cloudflare Pages
+1. 将该仓库连接到 Cloudflare Pages。
+2. 设置环境变量 `BASIC_AUTH_USER` / `BASIC_AUTH_PASS`。
+3. 使用以下构建配置：
+   - 构建命令：`npm run pages:build`
+   - 输出目录：`.vercel/output/static`
+4. 项目已包含 `wrangler.json` 配置文件用于 Cloudflare Workers 部署。
 
 CSV 说明
 - CSV 文件包含以下列（按顺序）：
