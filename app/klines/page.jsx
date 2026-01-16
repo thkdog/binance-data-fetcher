@@ -2,26 +2,48 @@
 
 import React, { useEffect } from 'react';
 import dayjs from 'dayjs';
-import { Button, Card, DatePicker, Form, Input, Space, Typography } from 'antd';
+import { Button, Card, DatePicker, Form, Input, Select, Space, Typography } from 'antd';
 import { Sidebar } from '../components/Sidebar';
 
 const { RangePicker } = DatePicker;
-const { Title, Text } = Typography;
+const { Title, Paragraph, Text } = Typography;
 
-export default function FundingRatePage() {
+const intervalOptions = [
+  '1s',
+  '1m',
+  '3m',
+  '5m',
+  '15m',
+  '30m',
+  '1h',
+  '2h',
+  '4h',
+  '6h',
+  '12h',
+  '1d',
+  '1w',
+  '1M',
+].map((value) => ({ label: value, value }));
+
+export default function KlinesPage() {
   const [form] = Form.useForm();
-  const storageKey = 'funding-rate-form-cache';
+  const storageKey = 'kline-form-cache';
+  const defaults = { mode: 'spot', interval: '1h' };
 
   useEffect(() => {
     const cached = localStorage.getItem(storageKey);
-    if (!cached) return;
+    if (!cached) {
+      form.setFieldsValue(defaults);
+      return;
+    }
 
     try {
       const parsed = JSON.parse(cached);
       const range = parsed.range?.map((ts) => (ts ? dayjs(ts) : null));
-      form.setFieldsValue({ ...parsed, range });
+      form.setFieldsValue({ ...defaults, ...parsed, range });
     } catch (err) {
-      console.error('Failed to restore funding rate form cache', err);
+      console.error('Failed to restore kline form cache', err);
+      form.setFieldsValue(defaults);
     }
   }, [form]);
 
@@ -34,19 +56,21 @@ export default function FundingRatePage() {
     try {
       localStorage.setItem(storageKey, JSON.stringify(payload));
     } catch (err) {
-      console.error('Failed to cache funding rate form', err);
+      console.error('Failed to cache kline form', err);
     }
   };
 
   const onFinish = (values) => {
     const [start, end] = values.range;
     const params = new URLSearchParams({
+      mode: values.mode,
       symbol: values.symbol.trim().toUpperCase(),
+      interval: values.interval,
       start: String(start.valueOf()),
       end: String(end.valueOf()),
     });
 
-    window.location.href = `/api/funding-rate?${params.toString()}`;
+    window.location.href = `/api/klines?${params.toString()}`;
   };
 
   return (
@@ -58,21 +82,42 @@ export default function FundingRatePage() {
           <Card className="tool-card">
             <Space direction="vertical" size={16} style={{ width: '100%' }}>
               <Title level={3} style={{ margin: 0 }}>
-                U 本位合约资金费率下载器
+                K 线下载器
               </Title>
               <Form
                 form={form}
                 layout="vertical"
                 onFinish={onFinish}
+                initialValues={defaults}
                 onValuesChange={handleValuesChange}
-                initialValues={{}}
               >
+                <Form.Item
+                  label="市场"
+                  name="mode"
+                  rules={[{ required: true, message: '请选择市场。' }]}
+                >
+                  <Select
+                    options={[
+                      { label: '现货', value: 'spot' },
+                      { label: '合约', value: 'futures' },
+                    ]}
+                  />
+                </Form.Item>
+
                 <Form.Item
                   label="交易对"
                   name="symbol"
                   rules={[{ required: true, message: '请输入交易对，例如 BTCUSDT。' }]}
                 >
                   <Input placeholder="BTCUSDT" />
+                </Form.Item>
+
+                <Form.Item
+                  label="K 线周期"
+                  name="interval"
+                  rules={[{ required: true, message: '请选择周期。' }]}
+                >
+                  <Select options={intervalOptions} />
                 </Form.Item>
 
                 <Form.Item

@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 
 const items = [
   {
-    href: '/',
+    href: '/klines',
     title: 'K 线下载器',
     desc: '历史行情 CSV 下载',
   },
