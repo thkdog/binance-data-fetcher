@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { fetchKlines, klinesToCsv } from '../../../lib/klines';
+import { fetchKlines, klinesToCsv } from '../../lib/klines';
 
 export const maxDuration = 300;
 

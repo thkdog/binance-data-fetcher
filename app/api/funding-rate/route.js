@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { fetchFundingRates, fundingRatesToCsv } from '../../../lib/fundingRate';
+import { fetchFundingRates, fundingRatesToCsv } from '../../lib/fundingRate';
 
 export const maxDuration = 300;
 
