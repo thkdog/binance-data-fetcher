@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
-import { fetchKlines, klinesToCsv } from '../../lib/klines';
+import { fetchFuturesKlines } from '@/lib/klines/futures';
+import { klinesToCsv } from '@/lib/klines/shared';
 
+export const runtime = 'nodejs';
 export const maxDuration = 300;
 
 function sanitizeFilename(value) {
@@ -9,13 +11,12 @@ function sanitizeFilename(value) {
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
-  const mode = searchParams.get('mode');
   const symbol = searchParams.get('symbol');
   const interval = searchParams.get('interval');
   const start = searchParams.get('start');
   const end = searchParams.get('end');
 
-  if (!mode || !symbol || !interval || !start || !end) {
+  if (!symbol || !interval || !start || !end) {
     return NextResponse.json({ error: 'Missing required query params.' }, { status: 400 });
   }
 
@@ -26,8 +27,7 @@ export async function GET(request) {
   }
 
   try {
-    const rows = await fetchKlines({
-      mode,
+    const rows = await fetchFuturesKlines({
       symbol: symbol.toUpperCase(),
       interval,
       startTime,
@@ -38,7 +38,7 @@ export async function GET(request) {
     const csv = klinesToCsv(rows);
     const filename = [
       sanitizeFilename(symbol),
-      sanitizeFilename(mode),
+      'futures',
       sanitizeFilename(interval),
       startTime,
       endTime,

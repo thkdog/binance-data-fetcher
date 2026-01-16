@@ -6,7 +6,7 @@ import { Button, Card, DatePicker, Form, Input, Select, Space, Typography } from
 import { Sidebar } from '../components/Sidebar';
 
 const { RangePicker } = DatePicker;
-const { Title, Paragraph, Text } = Typography;
+const { Title, Text } = Typography;
 
 const intervalOptions = [
   '1s',
@@ -19,16 +19,18 @@ const intervalOptions = [
   '2h',
   '4h',
   '6h',
+  '8h',
   '12h',
   '1d',
+  '3d',
   '1w',
   '1M',
 ].map((value) => ({ label: value, value }));
 
-export default function KlinesPage() {
+export default function SpotKlinesPage() {
   const [form] = Form.useForm();
-  const storageKey = 'kline-form-cache';
-  const defaults = { mode: 'spot', interval: '1h' };
+  const storageKey = 'spot-kline-form-cache';
+  const defaults = { interval: '1h' };
 
   useEffect(() => {
     const cached = localStorage.getItem(storageKey);
@@ -42,7 +44,7 @@ export default function KlinesPage() {
       const range = parsed.range?.map((ts) => (ts ? dayjs(ts) : null));
       form.setFieldsValue({ ...defaults, ...parsed, range });
     } catch (err) {
-      console.error('Failed to restore kline form cache', err);
+      console.error('Failed to restore spot kline form cache', err);
       form.setFieldsValue(defaults);
     }
   }, [form]);
@@ -56,21 +58,20 @@ export default function KlinesPage() {
     try {
       localStorage.setItem(storageKey, JSON.stringify(payload));
     } catch (err) {
-      console.error('Failed to cache kline form', err);
+      console.error('Failed to cache spot kline form', err);
     }
   };
 
   const onFinish = (values) => {
     const [start, end] = values.range;
     const params = new URLSearchParams({
-      mode: values.mode,
       symbol: values.symbol.trim().toUpperCase(),
       interval: values.interval,
       start: String(start.valueOf()),
       end: String(end.valueOf()),
     });
 
-    window.location.href = `/api/klines?${params.toString()}`;
+    window.location.href = `/api/spot/klines?${params.toString()}`;
   };
 
   return (
@@ -82,7 +83,7 @@ export default function KlinesPage() {
           <Card className="tool-card">
             <Space direction="vertical" size={16} style={{ width: '100%' }}>
               <Title level={3} style={{ margin: 0 }}>
-                K 线下载器
+                现货 K 线下载器
               </Title>
               <Form
                 form={form}
@@ -91,19 +92,6 @@ export default function KlinesPage() {
                 initialValues={defaults}
                 onValuesChange={handleValuesChange}
               >
-                <Form.Item
-                  label="市场"
-                  name="mode"
-                  rules={[{ required: true, message: '请选择市场。' }]}
-                >
-                  <Select
-                    options={[
-                      { label: '现货', value: 'spot' },
-                      { label: '合约', value: 'futures' },
-                    ]}
-                  />
-                </Form.Item>
-
                 <Form.Item
                   label="交易对"
                   name="symbol"

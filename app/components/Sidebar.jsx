@@ -6,9 +6,14 @@ import { usePathname } from 'next/navigation';
 
 const items = [
   {
-    href: '/klines',
-    title: 'K 线下载器',
-    desc: '历史行情 CSV 下载',
+    href: '/spot-klines',
+    title: '现货 K 线下载器',
+    desc: '现货历史行情 CSV',
+  },
+  {
+    href: '/futures-klines',
+    title: '合约 K 线下载器',
+    desc: '合约历史行情 CSV',
   },
   {
     href: '/funding-rate',
